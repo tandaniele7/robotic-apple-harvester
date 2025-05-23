@@ -1,10 +1,20 @@
+"""
+Hyperparameter optimization script for YOLOv8 model training using Optuna.
+
+This script performs automated hyperparameter tuning for YOLOv8 segmentation model
+using Optuna framework. It optimizes various parameters including learning rate,
+augmentation settings, and training parameters to minimize the inverse of mAP50-95 metric.
+Results are stored in SQLite database and visualized through plots saved in 'optuna_results' directory.
+
+"""
+
 import optuna
 from ultralytics import YOLO
 import matplotlib.pyplot as plt
 import yaml
 import os
-curDir = os.getcwd()
 
+curDir = os.getcwd()
 dataset_path = f'{curDir}/training/data.yaml'
 
 def objective(trial):

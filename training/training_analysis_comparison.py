@@ -1,5 +1,12 @@
-from pickletools import optimize
-import numpy as np
+""" 
+This script analyzes and compares training results from multiple model runs:
+- Reads training results and configurations from CSV and YAML files
+- Extracts metrics like mAP50-95(B) scores for different optimizers (AdamW vs SGD)
+- Plots comparison graphs showing performance across different training runs
+- Processes results from train2 to train214 directories
+- Creates subplots comparing optimizer performance with customized formatting
+"""
+
 import matplotlib.pyplot as plt
 import csv
 import yaml

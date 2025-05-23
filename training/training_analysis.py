@@ -1,13 +1,30 @@
-import array
-from opcode import opname
-from matplotlib.font_manager import json_load
-from sympy import false
+"""
+This script analyzes YOLO model training results in two modes:
+
+1. Create JSON file mode:
+    - Processes training results from multiple runs (train2-268)
+    - Loads YOLO models and validation results
+    - Extracts metrics from results.csv and args.yaml files
+    - Saves consolidated results to train_info.json
+
+2. Analyze JSON file mode:
+    - Loads previously saved train_info.json
+    - Separates results by optimizer type (AdamW vs SGD)
+    - Creates 4 subplots comparing:
+      - Overall mAP scores for AdamW
+      - Per-class maps for AdamW
+      - Overall mAP scores for SGD
+      - Per-class maps for SGD
+    - Visualizes results with matplotlib
+"""
+
 from ultralytics import YOLO
 import os
 import yaml
 import csv
 import json
 import matplotlib.pyplot as plt
+
 
 curDir = os.getcwd()
 os.system("clear")
