@@ -1,0 +1,12 @@
+# Train/val/test sets as 1) dir: path/to/imgs, 2) file: path/to/imgs.txt, or 3) list: [path/to/imgs1, path/to/imgs2, ..]
+#path: dataset/  # dataset root dir
+train: dataset/train  # train images (relative to 'path') 4 images
+val: dataset/val  # val images (relative to 'path') 4 images
+test: dataset/test # test images (optional)
+
+# Classes (80 COCO classes)
+names:
+  0: apple
+  1: branches
+  2: metal_wire
+  3: background

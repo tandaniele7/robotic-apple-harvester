@@ -1,0 +1,13 @@
+# results and downloads
+optuna_results/
+ros2/
+runs/
+training/runs/
+precision-optimization.db
+ws/
+yolov*
+
+# misc
+.DS_Store
+*.pem
+training/training_analysisv2.py

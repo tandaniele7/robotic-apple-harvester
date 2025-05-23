@@ -1,0 +1,5 @@
+---
+# it must be a position in between 0.0 (closed) and 0.8 (open)
+std_msgs/Float64 target_status
+bool success
+string message
