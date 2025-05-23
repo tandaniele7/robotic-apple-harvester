@@ -1,40 +1,57 @@
 import numpy as np
 import pyrealsense2 as rs
 import struct
-from geometry_msgs.msg import PointStamped, Quaternion, Vector3
+from geometry_msgs.msg import PointStamped, Quaternion, Vector3, Pose
+from moveit_msgs.msg import CollisionObject
+from shape_msgs.msg import SolidPrimitive 
 from tf2_ros import TransformStamped
 from tf2_geometry_msgs import do_transform_point
 
-def estimate_apple_radius(points, intrinsics):
-    # Calculate center of the apple in 3D space
-    center = np.mean(points, axis=0)
- 
-    # Project 3D points to 2D image plane
-    pixel_points = []
-    for point in points:
-        pixel = rs.rs2_project_point_to_pixel(intrinsics, point)
-        pixel_points.append(pixel)
-    pixel_points = np.array(pixel_points)
- 
-    # Project center to 2D image plane
-    center_pixel = rs.rs2_project_point_to_pixel(intrinsics, center)
- 
-    # Calculate distances in pixel space
-    distances = np.linalg.norm(pixel_points - center_pixel, axis=1)
- 
-    # Find the maximum distance in pixels
-    max_distance_pixels = np.max(distances)
- 
-    # Convert pixel distance to 3D distance
-    # We'll use the depth of the center point for this conversion
-    depth = center[2]  # Assuming Z is depth
-    max_distance_3d = max_distance_pixels * depth / intrinsics.fx
- 
-    # Radius is half of the maximum distance
-    radius = max_distance_3d / 2
- 
-    return radius, depth
+def create_collision_floor():
+    box_object = CollisionObject()
+    box_object.header.frame_id = "world"  # Or your desired frame
+    box_object.id = "floor"
 
+    # Define the box primitive
+    box = SolidPrimitive()
+    box.type = SolidPrimitive.BOX
+    box.dimensions = [1.2, 1.2, 0.01]  # [height, radius]
+
+    # Set the pose of the box
+    box_pose = Pose()
+
+    box_pose.position.x = 0.0
+    box_pose.position.y = 0.0
+    box_pose.position.z = -0.0051
+    box_pose.orientation.w = 1.0
+
+    # Add the primitive and pose to the collision object
+    box_object.primitives = [box]
+    box_object.primitive_poses = [box_pose]
+
+    # Set the operation to add the object
+    box_object.operation = CollisionObject.ADD 
+
+    # Publish the collision object
+    return box_object
+
+def estimate_apple_radius(points, center_):
+    # Calculate center of the apple in 3D space
+    center = np.array(center_)
+ 
+    # Calculate 3D distances from center to all points
+    distances_3d = np.linalg.norm(points - center, axis=1)
+ 
+    # Use the median of the top 10% distances as our radius estimate
+    # This helps reduce the impact of outliers
+    sorted_distances = np.sort(distances_3d)
+    top_10_percent = sorted_distances[:int(0.2*len(sorted_distances))]
+    radius = np.median(top_10_percent)
+ 
+    # Convert to meters if necessary (assuming input is in millimeters)
+    radius_meters = radius*0.8 #underestimation of radius to avoid problems with the gripper
+ 
+    return radius_meters, center[2]
 
 def calculate_grasping_orientation(tool_frame_position, apple_position):
     """
@@ -75,7 +92,6 @@ def calculate_grasping_orientation(tool_frame_position, apple_position):
     
     return quaternion
 
-
 def multiply_quaternion(q1, q2):
     x1, y1, z1, tn1 = q1
     x2, y2, z2, tn2 = q2
@@ -98,6 +114,7 @@ def shift_point(quaternion, translation, shift_distance):
     transform = TransformStamped()
     transform.transform.rotation = quaternion
     transform.transform.translation = translation
+
 
     
 
@@ -124,5 +141,5 @@ def shift_point(quaternion, translation, shift_distance):
     # Transform the shifted point back to the world frame
     shifted_point_world = do_transform_point(shifted_point_apple, inverse_transform)
 
-    return (shifted_point_world.point.x, shifted_point_world.point.y, shifted_point_world.point.z)
+    return (shifted_point_world.point.x, shifted_point_world.point.y, float(translation.z))
 
